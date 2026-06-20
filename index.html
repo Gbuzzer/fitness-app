@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georg — Körperdaten 2019–2020</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="title">Georg — Körperdaten 2019–2020</h1>
+            <div class="date-range">
+                <input type="date" id="dateStart" class="date-input">
+                <span class="date-separator">bis</span>
+                <input type="date" id="dateEnd" class="date-input">
+                <button id="dateResetBtn" class="date-reset-btn">⟲ Gesamter Zeitraum</button>
+            </div>
+            <div class="header-controls">
+                <div class="metrics-selects">
+                    <select id="metricSelect1" class="metric-select" title="Primäre Metrik">
+                        <option value="gewicht_kg">Gewicht (kg)</option>
+                        <option value="koerperfett_pct">Körperfett (%)</option>
+                        <option value="bmi">BMI</option>
+                        <option value="grundumsatz_kcal">Grundumsatz (kcal)</option>
+                        <option value="viszeralfett">Viszeralfett</option>
+                        <option value="muskelmasse_kg">Muskelmasse (kg)</option>
+                        <option value="knochen_kg">Knochen (kg)</option>
+                        <option value="protein_pct">Protein (%)</option>
+                        <option value="koerperwasser_pct">Körperwasser (%)</option>
+                    </select>
+                    <select id="metricSelect2" class="metric-select" title="Sekundäre Metrik (optional)">
+                        <option value="">— Keine —</option>
+                        <option value="gewicht_kg">Gewicht (kg)</option>
+                        <option value="koerperfett_pct">Körperfett (%)</option>
+                        <option value="bmi">BMI</option>
+                        <option value="grundumsatz_kcal">Grundumsatz (kcal)</option>
+                        <option value="viszeralfett">Viszeralfett</option>
+                        <option value="muskelmasse_kg">Muskelmasse (kg)</option>
+                        <option value="knochen_kg">Knochen (kg)</option>
+                        <option value="protein_pct">Protein (%)</option>
+                        <option value="koerperwasser_pct">Körperwasser (%)</option>
+                    </select>
+                </div>
+                <div class="scale-controls-header">
+                    <button class="scale-btn active" data-scale="day">Tag</button>
+                    <button class="scale-btn" data-scale="week">Woche</button>
+                    <button class="scale-btn" data-scale="month">Monat</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Mittelwert</div>
+                <div class="stat-value" id="statAvg">-</div>
+                <div class="stat-unit" id="statAvgUnit"></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Min</div>
+                <div class="stat-value" id="statMin">-</div>
+                <div class="stat-unit" id="statMinUnit"></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Max</div>
+                <div class="stat-value" id="statMax">-</div>
+                <div class="stat-unit" id="statMaxUnit"></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Trend</div>
+                <div class="stat-value" id="statTrend">-</div>
+                <div class="stat-unit" id="statTrendUnit">pro Woche</div>
+            </div>
+        </div>
+
+        <!-- Chart Container -->
+        <div class="chart-container">
+            <canvas id="chart"></canvas>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="loading">Daten werden geladen...</div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
