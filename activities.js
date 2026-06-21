@@ -378,6 +378,9 @@ function showActivityDetail(act) {
 
     content.innerHTML = `
         <div class="act-modal-title">${emoji} ${sportName} &ndash; ${act.datum}</div>
+        ${hasGps ? `
+            <div id="actRouteMap" class="act-modal-map"></div>
+        ` : ''}
         <div class="act-modal-grid">
             ${items.map(it => `
                 <div class="act-modal-item">
@@ -386,10 +389,6 @@ function showActivityDetail(act) {
                 </div>
             `).join('')}
         </div>
-        ${hasGps ? `
-            <div class="act-modal-section-title">Route</div>
-            <div id="actRouteMap" class="act-modal-map"></div>
-        ` : ''}
         ${hasHr ? `
             <div class="act-modal-section-title">Herzfrequenz-Verlauf</div>
             <div class="act-modal-hr-chart"><canvas id="actHrCanvas"></canvas></div>
@@ -398,7 +397,7 @@ function showActivityDetail(act) {
 
     modal.classList.remove('hidden');
 
-    if (hasGps) setTimeout(() => renderActivityMap(act.gps_track), 100);
+    if (hasGps) setTimeout(() => renderActivityMap(act.gps_track), 200);
 
     if (hasHr) {
         const t0     = act.heartrate[0].startTime;
