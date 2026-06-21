@@ -3,88 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Georg — Körperdaten 2019–2020</title>
+    <title>Georg — Fitness 2019–2026</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <h1 class="title">Georg — Körperdaten 2019–2020</h1>
-            <div class="date-range">
-                <input type="date" id="dateStart" class="date-input">
-                <span class="date-separator">bis</span>
-                <input type="date" id="dateEnd" class="date-input">
-                <button id="dateResetBtn" class="date-reset-btn">⟲ Gesamter Zeitraum</button>
-            </div>
-            <div class="header-controls">
-                <div class="metrics-selects">
-                    <select id="metricSelect1" class="metric-select" title="Primäre Metrik">
-                        <option value="gewicht_kg">Gewicht (kg)</option>
-                        <option value="koerperfett_pct">Körperfett (%)</option>
-                        <option value="bmi">BMI</option>
-                        <option value="grundumsatz_kcal">Grundumsatz (kcal)</option>
-                        <option value="viszeralfett">Viszeralfett</option>
-                        <option value="muskelmasse_kg">Muskelmasse (kg)</option>
-                        <option value="knochen_kg">Knochen (kg)</option>
-                        <option value="protein_pct">Protein (%)</option>
-                        <option value="koerperwasser_pct">Körperwasser (%)</option>
-                    </select>
-                    <select id="metricSelect2" class="metric-select" title="Sekundäre Metrik (optional)">
-                        <option value="">— Keine —</option>
-                        <option value="gewicht_kg">Gewicht (kg)</option>
-                        <option value="koerperfett_pct">Körperfett (%)</option>
-                        <option value="bmi">BMI</option>
-                        <option value="grundumsatz_kcal">Grundumsatz (kcal)</option>
-                        <option value="viszeralfett">Viszeralfett</option>
-                        <option value="muskelmasse_kg">Muskelmasse (kg)</option>
-                        <option value="knochen_kg">Knochen (kg)</option>
-                        <option value="protein_pct">Protein (%)</option>
-                        <option value="koerperwasser_pct">Körperwasser (%)</option>
-                    </select>
-                </div>
-                <div class="scale-controls-header">
-                    <button class="scale-btn active" data-scale="day">Tag</button>
-                    <button class="scale-btn" data-scale="week">Woche</button>
-                    <button class="scale-btn" data-scale="month">Monat</button>
-                </div>
-            </div>
+        <!-- App Header -->
+        <header class="app-header">
+            <h1 class="app-title">Georg — Fitness 2019–2026</h1>
+            <nav class="tab-nav">
+                <button class="tab-btn active" data-tab="gewicht">Gewicht</button>
+                <button class="tab-btn" data-tab="aktivitaeten">Aktivitäten</button>
+            </nav>
         </header>
 
-        <!-- Stats Cards -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Mittelwert</div>
-                <div class="stat-value" id="statAvg">-</div>
-                <div class="stat-unit" id="statAvgUnit"></div>
+        <!-- ═══ TAB: GEWICHT ═══ -->
+        <div id="tab-gewicht" class="tab-content active">
+            <div class="tab-controls">
+                <div class="date-range">
+                    <input type="date" id="dateStart" class="date-input">
+                    <span class="date-separator">bis</span>
+                    <input type="date" id="dateEnd" class="date-input">
+                    <button id="dateResetBtn" class="date-reset-btn">⟲ Gesamt</button>
+                </div>
+                <div class="right-controls">
+                    <div class="metrics-selects">
+                        <select id="metricSelect1" class="metric-select" title="Primäre Metrik">
+                            <option value="gewicht_kg">Gewicht (kg)</option>
+                            <option value="koerperfett_pct">Körperfett (%)</option>
+                            <option value="bmi">BMI</option>
+                            <option value="grundumsatz_kcal">Grundumsatz (kcal)</option>
+                            <option value="viszeralfett">Viszeralfett</option>
+                            <option value="muskelmasse_kg">Muskelmasse (kg)</option>
+                            <option value="knochen_kg">Knochen (kg)</option>
+                            <option value="protein_pct">Protein (%)</option>
+                            <option value="koerperwasser_pct">Körperwasser (%)</option>
+                        </select>
+                        <select id="metricSelect2" class="metric-select" title="Zweite Metrik">
+                            <option value="">— Keine —</option>
+                            <option value="gewicht_kg">Gewicht (kg)</option>
+                            <option value="koerperfett_pct">Körperfett (%)</option>
+                            <option value="bmi">BMI</option>
+                            <option value="grundumsatz_kcal">Grundumsatz (kcal)</option>
+                            <option value="viszeralfett">Viszeralfett</option>
+                            <option value="muskelmasse_kg">Muskelmasse (kg)</option>
+                            <option value="knochen_kg">Knochen (kg)</option>
+                            <option value="protein_pct">Protein (%)</option>
+                            <option value="koerperwasser_pct">Körperwasser (%)</option>
+                        </select>
+                    </div>
+                    <div class="scale-controls-header">
+                        <button class="scale-btn active" data-scale="day">Tag</button>
+                        <button class="scale-btn" data-scale="week">Woche</button>
+                        <button class="scale-btn" data-scale="month">Monat</button>
+                    </div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Min</div>
-                <div class="stat-value" id="statMin">-</div>
-                <div class="stat-unit" id="statMinUnit"></div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Mittelwert</div>
+                    <div class="stat-value" id="statAvg">-</div>
+                    <div class="stat-unit" id="statAvgUnit"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Min</div>
+                    <div class="stat-value" id="statMin">-</div>
+                    <div class="stat-unit" id="statMinUnit"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Max</div>
+                    <div class="stat-value" id="statMax">-</div>
+                    <div class="stat-unit" id="statMaxUnit"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Trend</div>
+                    <div class="stat-value" id="statTrend">-</div>
+                    <div class="stat-unit" id="statTrendUnit">pro Woche</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Max</div>
-                <div class="stat-value" id="statMax">-</div>
-                <div class="stat-unit" id="statMaxUnit"></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Trend</div>
-                <div class="stat-value" id="statTrend">-</div>
-                <div class="stat-unit" id="statTrendUnit">pro Woche</div>
+
+            <div class="chart-container">
+                <canvas id="chart"></canvas>
             </div>
         </div>
 
-        <!-- Chart Container -->
-        <div class="chart-container">
-            <canvas id="chart"></canvas>
+        <!-- ═══ TAB: AKTIVITÄTEN ═══ -->
+        <div id="tab-aktivitaeten" class="tab-content">
+            <div class="tab-controls">
+                <div class="date-range">
+                    <input type="date" id="actDateStart" class="date-input">
+                    <span class="date-separator">bis</span>
+                    <input type="date" id="actDateEnd" class="date-input">
+                    <button id="actDateResetBtn" class="date-reset-btn">⟲ Gesamt</button>
+                </div>
+                <div class="right-controls">
+                    <div class="sport-filter">
+                        <button class="sport-btn active" data-sport="all">Alle</button>
+                        <button class="sport-btn" data-sport="4">🏃 Joggen</button>
+                        <button class="sport-btn" data-sport="3">🚴 Radfahren</button>
+                        <button class="sport-btn" data-sport="5">🥾 Wandern</button>
+                    </div>
+                    <select id="actMetricSelect" class="metric-select">
+                        <option value="distanz_km">Distanz (km)</option>
+                        <option value="dauer_min">Dauer (min)</option>
+                        <option value="kalorien_kcal">Kalorien (kcal)</option>
+                        <option value="schritte">Schritte</option>
+                    </select>
+                    <div class="scale-controls-header">
+                        <button class="act-scale-btn active" data-scale="all">Alle</button>
+                        <button class="act-scale-btn" data-scale="week">Woche</button>
+                        <button class="act-scale-btn" data-scale="month">Monat</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Aktivitäten</div>
+                    <div class="stat-value" id="actStatCount">-</div>
+                    <div class="stat-unit">gesamt</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Distanz</div>
+                    <div class="stat-value" id="actStatDist">-</div>
+                    <div class="stat-unit">km gesamt</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Kalorien</div>
+                    <div class="stat-value" id="actStatCal">-</div>
+                    <div class="stat-unit">kcal gesamt</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Ø Distanz</div>
+                    <div class="stat-value" id="actStatAvgDist">-</div>
+                    <div class="stat-unit">km pro Aktivität</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Ø Herzfrequenz</div>
+                    <div class="stat-value" id="actStatHrAvg">-</div>
+                    <div class="stat-unit">bpm (Ø über Aktivitäten)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Max. Herzfrequenz</div>
+                    <div class="stat-value" id="actStatHrMax">-</div>
+                    <div class="stat-unit">bpm (höchster Wert)</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="actChart"></canvas>
+            </div>
         </div>
 
-        <!-- Loading State -->
         <div id="loading" class="loading">Daten werden geladen...</div>
     </div>
 
     <script src="app.js"></script>
+    <script src="activities.js"></script>
 </body>
 </html>
