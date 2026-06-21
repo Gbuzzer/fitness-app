@@ -291,6 +291,23 @@ function renderAct() {
 // ── Activity Detail Modal ──
 const SPORT_EMOJI = { 4: '🏃', 3: '🚴', 5: '🥾' };
 
+function fmtDuration(dauer_min) {
+    if (dauer_min == null) return null;
+    const s = Math.round(dauer_min * 60);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const ss = s % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+}
+
+function fmtPace(dauer_min, distanz_km) {
+    if (!dauer_min || !distanz_km || distanz_km <= 0) return null;
+    const s   = Math.round((dauer_min * 60) / distanz_km);
+    const m   = Math.floor(s / 60);
+    const ss  = s % 60;
+    return `${m}:${String(ss).padStart(2,'0')}`;
+}
+
 function showActivityDetail(act) {
     const modal   = document.getElementById('actDetailModal');
     const content = document.getElementById('actDetailContent');
@@ -298,20 +315,29 @@ function showActivityDetail(act) {
     const emoji     = SPORT_EMOJI[act.sportType] ?? '🏅';
     const sportName = SPORT_LABELS[act.sportType] ?? 'Sonstiges';
 
-    const durStr = act.dauer_min != null
-        ? act.dauer_min >= 60
-            ? `${Math.floor(act.dauer_min / 60)}h ${Math.round(act.dauer_min % 60)}min`
-            : `${Math.round(act.dauer_min)} min`
-        : null;
+    const isCycling = act.sportType === 3;
+
+    const durStr     = fmtDuration(act.dauer_min);
+    const speed_kmh  = (act.distanz_km && act.dauer_min)
+        ? (act.distanz_km / (act.dauer_min / 60)).toFixed(1) : null;
+    const tempo      = !isCycling ? fmtPace(act.dauer_min, act.distanz_km) : null;
+    const kadenz     = (act.schritte > 0 && act.dauer_min)
+        ? Math.round(act.schritte / act.dauer_min) : null;
+    const schrittcm  = (act.schritte > 0 && act.distanz_km)
+        ? Math.round(act.distanz_km * 100000 / act.schritte) : null;
 
     const items = [
-        act.distanz_km    != null && { label: 'Distanz',        value: act.distanz_km.toFixed(2),              unit: 'km'   },
-        durStr                    && { label: 'Dauer',           value: durStr,                                 unit: ''     },
-        act.kalorien_kcal != null && { label: 'Kalorien',        value: Math.round(act.kalorien_kcal).toLocaleString('de'), unit: 'kcal' },
-        act.schritte      != null && { label: 'Schritte',        value: act.schritte.toLocaleString('de'),      unit: ''     },
-        act.hr_avg        != null && { label: 'Ø Herzfrequenz',  value: act.hr_avg,                             unit: 'bpm'  },
-        act.hr_max        != null && { label: 'Max Herzfrequenz',value: act.hr_max,                             unit: 'bpm'  },
-        act.hr_min        != null && { label: 'Min Herzfrequenz',value: act.hr_min,                             unit: 'bpm'  },
+        act.distanz_km    != null && { label: 'Distanz',           value: act.distanz_km.toFixed(2),                          unit: 'km'          },
+        durStr                    && { label: 'Dauer',              value: durStr,                                             unit: ''            },
+        speed_kmh                 && { label: 'Ø Geschwindigkeit',  value: speed_kmh,                                          unit: 'km/h'        },
+        tempo                     && { label: 'Tempo',              value: tempo,                                              unit: 'min/km'      },
+        act.kalorien_kcal != null && { label: 'Kalorien',           value: Math.round(act.kalorien_kcal).toLocaleString('de'), unit: 'kcal'        },
+        act.hr_avg        != null && { label: 'Ø Herzfrequenz',     value: act.hr_avg,                                         unit: 'bpm'         },
+        act.hr_max        != null && { label: 'Max Herzfrequenz',   value: act.hr_max,                                         unit: 'bpm'         },
+        act.hr_min        != null && { label: 'Min Herzfrequenz',   value: act.hr_min,                                         unit: 'bpm'         },
+        kadenz            != null && { label: 'Kadenz',             value: kadenz,                                             unit: 'Schritte/min'},
+        schrittcm         != null && { label: 'Schrittlänge',       value: schrittcm,                                          unit: 'cm'          },
+        act.schritte      >  0    && { label: 'Schritte',           value: act.schritte.toLocaleString('de'),                  unit: ''            },
     ].filter(Boolean);
 
     const hasHr = act.heartrate?.length > 0;
