@@ -22,6 +22,7 @@ const ACT_METRIC_LABELS = {
 
 let actData = [];
 let actChart = null;
+let actDetailHrChart = null;
 let actCurrentSport  = 'all';
 let actCurrentMetric = 'distanz_km';
 let actCurrentScale  = 'all';
@@ -128,13 +129,13 @@ function getFilteredAct() {
 // ── Aggregation ──
 function aggregateAct(rows) {
     if (actCurrentScale === 'all') {
-        // one bar per activity
         return rows.map(d => ({
             label:     d.datum,
             value:     d[actCurrentMetric] ?? 0,
             sportType: d.sportType,
             hr_avg:    d.hr_avg ?? null,
             hr_max:    d.hr_max ?? null,
+            _raw:      d,
         }));
     }
 
@@ -235,6 +236,16 @@ function renderAct() {
             responsive: true,
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
+            onClick: (event, elements) => {
+                if (actCurrentScale !== 'all' || !elements.length) return;
+                const raw = aggregated[elements[0].index]?._raw;
+                if (raw) showActivityDetail(raw);
+            },
+            onHover: (event, elements) => {
+                const canvas = event.native?.target;
+                if (canvas) canvas.style.cursor =
+                    (elements.length && actCurrentScale === 'all') ? 'pointer' : 'default';
+            },
             plugins: {
                 legend: { display: false },
                 tooltip: {
@@ -276,6 +287,115 @@ function renderAct() {
         }
     });
 }
+
+// ── Activity Detail Modal ──
+const SPORT_EMOJI = { 4: '🏃', 3: '🚴', 5: '🥾' };
+
+function showActivityDetail(act) {
+    const modal   = document.getElementById('actDetailModal');
+    const content = document.getElementById('actDetailContent');
+
+    const emoji     = SPORT_EMOJI[act.sportType] ?? '🏅';
+    const sportName = SPORT_LABELS[act.sportType] ?? 'Sonstiges';
+
+    const durStr = act.dauer_min != null
+        ? act.dauer_min >= 60
+            ? `${Math.floor(act.dauer_min / 60)}h ${Math.round(act.dauer_min % 60)}min`
+            : `${Math.round(act.dauer_min)} min`
+        : null;
+
+    const items = [
+        act.distanz_km    != null && { label: 'Distanz',        value: act.distanz_km.toFixed(2),              unit: 'km'   },
+        durStr                    && { label: 'Dauer',           value: durStr,                                 unit: ''     },
+        act.kalorien_kcal != null && { label: 'Kalorien',        value: Math.round(act.kalorien_kcal).toLocaleString('de'), unit: 'kcal' },
+        act.schritte      != null && { label: 'Schritte',        value: act.schritte.toLocaleString('de'),      unit: ''     },
+        act.hr_avg        != null && { label: 'Ø Herzfrequenz',  value: act.hr_avg,                             unit: 'bpm'  },
+        act.hr_max        != null && { label: 'Max Herzfrequenz',value: act.hr_max,                             unit: 'bpm'  },
+        act.hr_min        != null && { label: 'Min Herzfrequenz',value: act.hr_min,                             unit: 'bpm'  },
+    ].filter(Boolean);
+
+    const hasHr = act.heartrate?.length > 0;
+
+    content.innerHTML = `
+        <div class="act-modal-title">${emoji} ${sportName} &ndash; ${act.datum}</div>
+        <div class="act-modal-grid">
+            ${items.map(it => `
+                <div class="act-modal-item">
+                    <div class="act-modal-item-label">${it.label}</div>
+                    <div class="act-modal-item-value">${it.value} <span class="act-modal-item-unit">${it.unit}</span></div>
+                </div>
+            `).join('')}
+        </div>
+        ${hasHr ? `
+            <div class="act-modal-hr-title">Herzfrequenz-Verlauf</div>
+            <div class="act-modal-hr-chart"><canvas id="actHrCanvas"></canvas></div>
+        ` : ''}
+    `;
+
+    modal.classList.remove('hidden');
+
+    if (actDetailHrChart) { actDetailHrChart.destroy(); actDetailHrChart = null; }
+
+    if (hasHr) {
+        const t0     = act.heartrate[0].startTime;
+        const labels = act.heartrate.map(p => {
+            const m = Math.round((p.startTime - t0) / 60000);
+            return `${m}'`;
+        });
+        const bpms = act.heartrate.map(p => p.bpm);
+
+        actDetailHrChart = new Chart(
+            document.getElementById('actHrCanvas').getContext('2d'),
+            {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: bpms,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239,68,68,0.12)',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        fill: true,
+                        tension: 0.3,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.85)',
+                            callbacks: { label: c => ` ${c.parsed.y} bpm` }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#b0b0b0', font: { size: 10 }, maxTicksLimit: 8 }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#b0b0b0', font: { size: 10 }, callback: v => `${v}` }
+                        }
+                    }
+                }
+            }
+        );
+    }
+}
+
+function hideActivityDetail() {
+    document.getElementById('actDetailModal').classList.add('hidden');
+    if (actDetailHrChart) { actDetailHrChart.destroy(); actDetailHrChart = null; }
+}
+
+document.getElementById('actModalClose').addEventListener('click', hideActivityDetail);
+document.getElementById('actDetailModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) hideActivityDetail();
+});
 
 // ── Boot ──
 loadActivities();

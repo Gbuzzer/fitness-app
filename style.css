@@ -279,6 +279,114 @@ canvas {
     display: none;
 }
 
+/* ── Activity Detail Modal ── */
+.act-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 1rem;
+}
+
+.act-modal-overlay.hidden {
+    display: none;
+}
+
+.act-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    max-width: 520px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.act-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-light);
+    font-size: 1.25rem;
+    line-height: 1;
+    padding: 0.25rem 0.4rem;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition: color 0.15s, background 0.15s;
+}
+
+.act-modal-close:hover {
+    color: var(--text);
+    background: var(--border);
+}
+
+.act-modal-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+    padding-right: 2rem;
+    line-height: 1.3;
+}
+
+.act-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.625rem;
+    margin-bottom: 1.25rem;
+}
+
+.act-modal-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+}
+
+.act-modal-item-label {
+    color: var(--text-light);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
+}
+
+.act-modal-item-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+.act-modal-item-unit {
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: var(--text-light);
+}
+
+.act-modal-hr-title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-light);
+    margin-bottom: 0.75rem;
+}
+
+.act-modal-hr-chart {
+    height: 130px;
+    position: relative;
+}
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
     .tab-controls {
