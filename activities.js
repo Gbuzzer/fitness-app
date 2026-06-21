@@ -369,6 +369,19 @@ function fmtDuration(dauer_min) {
     return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
 }
 
+// Daniels-Gilbert formula: estimates VO2max from race pace + duration
+function calcVO2max(distanz_km, dauer_min) {
+    if (!distanz_km || !dauer_min || distanz_km < 0.5) return null;
+    const v   = (distanz_km * 1000) / dauer_min;           // m/min
+    const vo2 = -4.60 + 0.182258 * v + 0.000104 * v * v;
+    if (vo2 <= 0) return null;
+    const pct = 0.8
+        + 0.1894393 * Math.exp(-0.012778   * dauer_min)
+        + 0.2989558 * Math.exp(-0.1932605  * dauer_min);
+    const r = Math.round(vo2 / pct);
+    return (r > 10 && r < 100) ? r : null;
+}
+
 function fmtPace(dauer_min, distanz_km) {
     if (!dauer_min || !distanz_km || distanz_km <= 0) return null;
     const s   = Math.round((dauer_min * 60) / distanz_km);
@@ -417,46 +430,70 @@ function showActivityDetail(act) {
     const sportName = SPORT_LABELS[act.sportType] ?? 'Sonstiges';
 
     const isCycling = act.sportType === 3;
+    const isRunning = [4, 104].includes(act.sportType);
 
-    const durStr     = fmtDuration(act.dauer_min);
-    const speed_kmh  = (act.distanz_km && act.dauer_min)
+    const durStr    = fmtDuration(act.dauer_min);
+    const speed_kmh = (act.distanz_km && act.dauer_min)
         ? (act.distanz_km / (act.dauer_min / 60)).toFixed(1) : null;
-    const tempo      = !isCycling ? fmtPace(act.dauer_min, act.distanz_km) : null;
-    const kadenz     = (act.schritte > 0 && act.dauer_min)
+    const tempo     = !isCycling ? fmtPace(act.dauer_min, act.distanz_km) : null;
+    const kadenz    = (act.schritte > 0 && act.dauer_min)
         ? Math.round(act.schritte / act.dauer_min) : null;
-    const schrittcm  = (act.schritte > 0 && act.distanz_km)
+    const schrittcm = (act.schritte > 0 && act.distanz_km)
         ? Math.round(act.distanz_km * 100000 / act.schritte) : null;
-
-    const items = [
-        act.distanz_km    != null && { label: 'Distanz',           value: act.distanz_km.toFixed(2),                          unit: 'km'          },
-        durStr                    && { label: 'Dauer',              value: durStr,                                             unit: ''            },
-        speed_kmh                 && { label: 'Ø Geschwindigkeit',  value: speed_kmh,                                          unit: 'km/h'        },
-        tempo                     && { label: 'Tempo',              value: tempo,                                              unit: 'min/km'      },
-        act.kalorien_kcal != null && { label: 'Kalorien',           value: Math.round(act.kalorien_kcal).toLocaleString('de'), unit: 'kcal'        },
-        act.hr_avg        != null && { label: 'Ø Herzfrequenz',     value: act.hr_avg,                                         unit: 'bpm'         },
-        act.hr_max        != null && { label: 'Max Herzfrequenz',   value: act.hr_max,                                         unit: 'bpm'         },
-        act.hr_min        != null && { label: 'Min Herzfrequenz',   value: act.hr_min,                                         unit: 'bpm'         },
-        kadenz            != null && { label: 'Kadenz',             value: kadenz,                                             unit: 'Schritte/min'},
-        schrittcm         != null && { label: 'Schrittlänge',       value: schrittcm,                                          unit: 'cm'          },
-        act.schritte      >  0    && { label: 'Schritte',           value: act.schritte.toLocaleString('de'),                  unit: ''            },
-    ].filter(Boolean);
+    const vo2max    = isRunning ? calcVO2max(act.distanz_km, act.dauer_min) : null;
 
     const hasGps = act.gps_track?.length > 1;
     const hasHr  = act.heartrate?.length > 0;
 
+    // Helper: stat card HTML
+    const card = (label, value, unit) => `
+        <div class="act-modal-item">
+            <div class="act-modal-item-label">${label}</div>
+            <div class="act-modal-item-value">${value ?? '–'} <span class="act-modal-item-unit">${value != null ? unit : ''}</span></div>
+        </div>`;
+
+    // Running/Jogging: fixed 3-column layout with semantic row order
+    const gridHtml = isRunning ? `
+        <div class="act-modal-grid act-modal-grid--run">
+            <div class="act-modal-row-label">Aktivität</div>
+            ${card('Distanz',          act.distanz_km?.toFixed(2),                                    'km')}
+            ${card('Dauer',            durStr,                                                        '')}
+            ${card('Kalorien',         act.kalorien_kcal != null ? Math.round(act.kalorien_kcal).toLocaleString('de') : null, 'kcal')}
+            <div class="act-modal-row-label">Leistung</div>
+            ${card('Ø Geschwindigkeit', speed_kmh,                                                    'km/h')}
+            ${card('Tempo',            tempo,                                                         'min/km')}
+            ${card('VO₂max',           vo2max,                                                        'ml/kg·min')}
+            <div class="act-modal-row-label">Schritte</div>
+            ${card('Schritte',         act.schritte > 0 ? act.schritte.toLocaleString('de') : null,  '')}
+            ${card('Schrittlänge',     schrittcm,                                                     'cm')}
+            ${card('Kadenz',           kadenz,                                                        '/min')}
+            <div class="act-modal-row-label">Herzfrequenz</div>
+            ${card('Durchschnitt',     act.hr_avg,                                                    'bpm')}
+            ${card('Minimum',          act.hr_min,                                                    'bpm')}
+            ${card('Maximum',          act.hr_max,                                                    'bpm')}
+        </div>
+    ` : `
+        <div class="act-modal-grid">
+            ${[
+                act.distanz_km    != null && card('Distanz',          act.distanz_km.toFixed(2),                                    'km'),
+                durStr                    && card('Dauer',             durStr,                                                        ''),
+                speed_kmh                 && card('Ø Geschwindigkeit', speed_kmh,                                                    'km/h'),
+                tempo                     && card('Tempo',             tempo,                                                        'min/km'),
+                act.kalorien_kcal != null && card('Kalorien',          Math.round(act.kalorien_kcal).toLocaleString('de'),           'kcal'),
+                act.hr_avg        != null && card('Ø Herzfrequenz',    act.hr_avg,                                                    'bpm'),
+                act.hr_max        != null && card('Max Herzfrequenz',  act.hr_max,                                                    'bpm'),
+                act.hr_min        != null && card('Min Herzfrequenz',  act.hr_min,                                                    'bpm'),
+                kadenz            != null && card('Kadenz',            kadenz,                                                        'Schritte/min'),
+                schrittcm         != null && card('Schrittlänge',      schrittcm,                                                     'cm'),
+                act.schritte      >  0    && card('Schritte',          act.schritte.toLocaleString('de'),                            ''),
+            ].filter(Boolean).join('')}
+        </div>
+    `;
+
     content.innerHTML = `
         <div class="act-modal-title">${emoji} ${sportName} &ndash; ${act.datum}</div>
-        ${hasGps ? `
-            <div id="actRouteMap" class="act-modal-map"></div>
-        ` : ''}
-        <div class="act-modal-grid">
-            ${items.map(it => `
-                <div class="act-modal-item">
-                    <div class="act-modal-item-label">${it.label}</div>
-                    <div class="act-modal-item-value">${it.value} <span class="act-modal-item-unit">${it.unit}</span></div>
-                </div>
-            `).join('')}
-        </div>
+        ${hasGps ? `<div id="actRouteMap" class="act-modal-map"></div>` : ''}
+        ${gridHtml}
         ${hasHr ? `
             <div class="act-modal-section-title">Herzfrequenz-Verlauf</div>
             <div class="act-modal-hr-chart"><canvas id="actHrCanvas"></canvas></div>

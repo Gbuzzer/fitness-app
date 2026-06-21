@@ -439,6 +439,22 @@ canvas {
     margin-bottom: 1.25rem;
 }
 
+.act-modal-grid--run {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.act-modal-row-label {
+    grid-column: 1 / -1;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-light);
+    padding-top: 0.25rem;
+    border-top: 1px solid var(--border);
+    margin-top: 0.25rem;
+}
+
 .act-modal-item {
     background: var(--bg);
     border: 1px solid var(--border);
