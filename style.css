@@ -373,13 +373,21 @@ canvas {
     color: var(--text-light);
 }
 
-.act-modal-hr-title {
+.act-modal-section-title {
     font-size: 0.72rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-light);
     margin-bottom: 0.75rem;
+}
+
+.act-modal-map {
+    height: 280px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin-bottom: 1.25rem;
 }
 
 .act-modal-hr-chart {

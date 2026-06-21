@@ -23,6 +23,7 @@ const ACT_METRIC_LABELS = {
 let actData = [];
 let actChart = null;
 let actDetailHrChart = null;
+let actMapInstance = null;
 let actCurrentSport  = 'all';
 let actCurrentMetric = 'distanz_km';
 let actCurrentScale  = 'all';
@@ -308,7 +309,35 @@ function fmtPace(dauer_min, distanz_km) {
     return `${m}:${String(ss).padStart(2,'0')}`;
 }
 
+function renderActivityMap(gpsTrack) {
+    if (actMapInstance) { actMapInstance.remove(); actMapInstance = null; }
+    const container = document.getElementById('actRouteMap');
+    if (!container) return;
+
+    const coords = gpsTrack.map(p => [p.lat, p.lon]);
+
+    actMapInstance = L.map('actRouteMap', { zoomControl: true, scrollWheelZoom: false });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
+        maxZoom: 19,
+    }).addTo(actMapInstance);
+
+    const line = L.polyline(coords, { color: '#10b981', weight: 3, opacity: 0.9 }).addTo(actMapInstance);
+
+    L.circleMarker(coords[0], { radius: 6, color: '#fff', fillColor: '#10b981', fillOpacity: 1, weight: 2 })
+        .bindTooltip('Start').addTo(actMapInstance);
+    L.circleMarker(coords[coords.length - 1], { radius: 6, color: '#fff', fillColor: '#ef4444', fillOpacity: 1, weight: 2 })
+        .bindTooltip('Ziel').addTo(actMapInstance);
+
+    actMapInstance.fitBounds(line.getBounds(), { padding: [20, 20] });
+}
+
 function showActivityDetail(act) {
+    // Destroy existing instances before DOM replacement
+    if (actMapInstance)   { actMapInstance.remove();    actMapInstance   = null; }
+    if (actDetailHrChart) { actDetailHrChart.destroy(); actDetailHrChart = null; }
+
     const modal   = document.getElementById('actDetailModal');
     const content = document.getElementById('actDetailContent');
 
@@ -340,7 +369,8 @@ function showActivityDetail(act) {
         act.schritte      >  0    && { label: 'Schritte',           value: act.schritte.toLocaleString('de'),                  unit: ''            },
     ].filter(Boolean);
 
-    const hasHr = act.heartrate?.length > 0;
+    const hasGps = act.gps_track?.length > 1;
+    const hasHr  = act.heartrate?.length > 0;
 
     content.innerHTML = `
         <div class="act-modal-title">${emoji} ${sportName} &ndash; ${act.datum}</div>
@@ -352,15 +382,19 @@ function showActivityDetail(act) {
                 </div>
             `).join('')}
         </div>
+        ${hasGps ? `
+            <div class="act-modal-section-title">Route</div>
+            <div id="actRouteMap" class="act-modal-map"></div>
+        ` : ''}
         ${hasHr ? `
-            <div class="act-modal-hr-title">Herzfrequenz-Verlauf</div>
+            <div class="act-modal-section-title">Herzfrequenz-Verlauf</div>
             <div class="act-modal-hr-chart"><canvas id="actHrCanvas"></canvas></div>
         ` : ''}
     `;
 
     modal.classList.remove('hidden');
 
-    if (actDetailHrChart) { actDetailHrChart.destroy(); actDetailHrChart = null; }
+    if (hasGps) requestAnimationFrame(() => renderActivityMap(act.gps_track));
 
     if (hasHr) {
         const t0     = act.heartrate[0].startTime;
@@ -415,6 +449,7 @@ function showActivityDetail(act) {
 
 function hideActivityDetail() {
     document.getElementById('actDetailModal').classList.add('hidden');
+    if (actMapInstance)   { actMapInstance.remove();    actMapInstance   = null; }
     if (actDetailHrChart) { actDetailHrChart.destroy(); actDetailHrChart = null; }
 }
 
