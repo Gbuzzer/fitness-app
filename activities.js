@@ -27,6 +27,7 @@ let actMapInstance = null;
 let actCurrentSport  = 'all';
 let actCurrentMetric = 'distanz_km';
 let actCurrentScale  = 'all';
+let actCurrentView   = 'chart';
 let actDateStart = null;
 let actDateEnd   = null;
 
@@ -61,7 +62,7 @@ async function loadActivities() {
     }
 
     setupActListeners();
-    renderAct();
+    render();
 }
 
 function formatD(date) {
@@ -72,11 +73,11 @@ function formatD(date) {
 function setupActListeners() {
     actDateStartEl.addEventListener('change', e => {
         actDateStart = e.target.value ? new Date(e.target.value) : null;
-        renderAct();
+        render();
     });
     actDateEndEl.addEventListener('change', e => {
         actDateEnd = e.target.value ? new Date(e.target.value) : null;
-        renderAct();
+        render();
     });
     actDateResetBtn.addEventListener('click', () => {
         if (!actData.length) return;
@@ -86,7 +87,7 @@ function setupActListeners() {
         actDateEndEl.value   = formatD(max);
         actDateStart = min;
         actDateEnd   = max;
-        renderAct();
+        render();
     });
 
     actMetricSelect.addEventListener('change', e => {
@@ -99,7 +100,7 @@ function setupActListeners() {
             sportBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             actCurrentSport = btn.dataset.sport;
-            renderAct();
+            render();
         });
     });
 
@@ -109,6 +110,19 @@ function setupActListeners() {
             btn.classList.add('active');
             actCurrentScale = btn.dataset.scale;
             renderAct();
+        });
+    });
+
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            actCurrentView = btn.dataset.view;
+            const isChart = actCurrentView === 'chart';
+            document.getElementById('actChartContainer').classList.toggle('hidden', !isChart);
+            document.getElementById('actListView').classList.toggle('hidden', isChart);
+            document.getElementById('actChartControls').classList.toggle('hidden', !isChart);
+            render();
         });
     });
 }
@@ -202,6 +216,60 @@ function updateActStats(rows) {
     document.getElementById('actStatAvgDist').textContent = avgDist.toFixed(1);
     document.getElementById('actStatHrAvg').textContent   = hrAvg != null ? hrAvg : '–';
     document.getElementById('actStatHrMax').textContent   = hrMax != null ? hrMax : '–';
+}
+
+// ── View dispatcher ──
+function render() {
+    if (actCurrentView === 'chart') renderAct();
+    else renderActList();
+}
+
+// ── List View ──
+function renderActList() {
+    const filtered = getFilteredAct().slice().reverse();
+    updateActStats(filtered);
+
+    const tbody = document.getElementById('actListBody');
+    if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="act-list-empty">Keine Aktivitäten gefunden</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map((act, idx) => {
+        const emoji     = SPORT_EMOJI[act.sportType] ?? '🏅';
+        const isCycling = act.sportType === 3;
+
+        const [y, mo, d] = act.datum.split('-');
+        const dateStr = `${d}.${mo}.${y}`;
+
+        const distStr  = act.distanz_km  != null ? `${act.distanz_km.toFixed(2)} <span class="act-list-dim">km</span>` : '–';
+        const durStr   = fmtDuration(act.dauer_min) ?? '–';
+        const pace     = fmtPace(act.dauer_min, act.distanz_km);
+        const speed    = (act.distanz_km && act.dauer_min)
+            ? (act.distanz_km / (act.dauer_min / 60)).toFixed(1) : null;
+        const paceStr  = isCycling
+            ? (speed ? `${speed} <span class="act-list-dim">km/h</span>` : '–')
+            : (pace  ? `${pace} <span class="act-list-dim">/km</span>`   : '–');
+        const calStr   = act.kalorien_kcal != null
+            ? `${Math.round(act.kalorien_kcal).toLocaleString('de')} <span class="act-list-dim">kcal</span>` : '–';
+        const hrStr    = act.hr_avg != null
+            ? `${act.hr_avg} <span class="act-list-dim">bpm</span>` : '–';
+
+        return `<tr data-idx="${idx}">
+            <td class="act-list-icon">${emoji}</td>
+            <td class="act-list-date">${dateStr}</td>
+            <td>${SPORT_LABELS[act.sportType] ?? 'Sonstiges'}</td>
+            <td>${distStr}</td>
+            <td>${durStr}</td>
+            <td>${paceStr}</td>
+            <td>${calStr}</td>
+            <td>${hrStr}</td>
+        </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('tr[data-idx]').forEach(row => {
+        row.addEventListener('click', () => showActivityDetail(filtered[+row.dataset.idx]));
+    });
 }
 
 // ── Chart ──

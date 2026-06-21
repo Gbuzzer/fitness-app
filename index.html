@@ -107,16 +107,22 @@
                         <button class="sport-btn" data-sport="3">🚴 Radfahren</button>
                         <button class="sport-btn" data-sport="5">🥾 Wandern</button>
                     </div>
-                    <select id="actMetricSelect" class="metric-select">
-                        <option value="distanz_km">Distanz (km)</option>
-                        <option value="dauer_min">Dauer (min)</option>
-                        <option value="kalorien_kcal">Kalorien (kcal)</option>
-                        <option value="schritte">Schritte</option>
-                    </select>
-                    <div class="scale-controls-header">
-                        <button class="act-scale-btn active" data-scale="all">Alle</button>
-                        <button class="act-scale-btn" data-scale="week">Woche</button>
-                        <button class="act-scale-btn" data-scale="month">Monat</button>
+                    <div id="actChartControls" class="act-chart-controls">
+                        <select id="actMetricSelect" class="metric-select">
+                            <option value="distanz_km">Distanz (km)</option>
+                            <option value="dauer_min">Dauer (min)</option>
+                            <option value="kalorien_kcal">Kalorien (kcal)</option>
+                            <option value="schritte">Schritte</option>
+                        </select>
+                        <div class="scale-controls-header">
+                            <button class="act-scale-btn active" data-scale="all">Alle</button>
+                            <button class="act-scale-btn" data-scale="week">Woche</button>
+                            <button class="act-scale-btn" data-scale="month">Monat</button>
+                        </div>
+                    </div>
+                    <div class="view-toggle">
+                        <button class="view-btn act-scale-btn active" data-view="chart">Diagramm</button>
+                        <button class="view-btn act-scale-btn" data-view="list">Liste</button>
                     </div>
                 </div>
             </div>
@@ -154,8 +160,26 @@
                 </div>
             </div>
 
-            <div class="chart-container">
+            <div class="chart-container" id="actChartContainer">
                 <canvas id="actChart"></canvas>
+            </div>
+
+            <div id="actListView" class="act-list hidden">
+                <table class="act-list-table">
+                    <thead>
+                        <tr>
+                            <th class="col-icon"></th>
+                            <th>Datum</th>
+                            <th>Sport</th>
+                            <th>Distanz</th>
+                            <th>Dauer</th>
+                            <th>Pace / Speed</th>
+                            <th>Kalorien</th>
+                            <th>Ø&nbsp;HR</th>
+                        </tr>
+                    </thead>
+                    <tbody id="actListBody"></tbody>
+                </table>
             </div>
         </div>
 
