@@ -310,11 +310,13 @@ function fmtPace(dauer_min, distanz_km) {
 }
 
 function renderActivityMap(gpsTrack) {
+    if (typeof L === 'undefined') return;
     if (actMapInstance) { actMapInstance.remove(); actMapInstance = null; }
     const container = document.getElementById('actRouteMap');
     if (!container) return;
 
     const coords = gpsTrack.map(p => [p.lat, p.lon]);
+    if (coords.length < 2) return;
 
     actMapInstance = L.map('actRouteMap', { zoomControl: true, scrollWheelZoom: false });
 
@@ -330,6 +332,8 @@ function renderActivityMap(gpsTrack) {
     L.circleMarker(coords[coords.length - 1], { radius: 6, color: '#fff', fillColor: '#ef4444', fillOpacity: 1, weight: 2 })
         .bindTooltip('Ziel').addTo(actMapInstance);
 
+    // Force Leaflet to recalculate container dimensions after modal is painted
+    actMapInstance.invalidateSize();
     actMapInstance.fitBounds(line.getBounds(), { padding: [20, 20] });
 }
 
@@ -394,7 +398,7 @@ function showActivityDetail(act) {
 
     modal.classList.remove('hidden');
 
-    if (hasGps) requestAnimationFrame(() => renderActivityMap(act.gps_track));
+    if (hasGps) setTimeout(() => renderActivityMap(act.gps_track), 100);
 
     if (hasHr) {
         const t0     = act.heartrate[0].startTime;
