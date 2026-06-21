@@ -73,7 +73,7 @@ function formatDateForInput(date) {
 }
 
 async function loadData() {
-    const response = await fetch('data.json');
+    const response = await fetch('data/weight_merged.json');
     const rawData = await response.json();
 
     // Convert decimal percentages to actual percentages (0.184 -> 18.4)
